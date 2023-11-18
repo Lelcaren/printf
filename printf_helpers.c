@@ -1,75 +1,53 @@
-#include <stdarg.h>
-#include <stdio.h>
 #include "main.h"
+#include <unistd.h>
 
 /**
- * _printf - Custom printf function
- * @format: Format string with conversion specifiers
- *
- * Return: Number of characters printed (excluding the null byte)
+ * print_buffer - Prints the contents of the buffer if it exists
+ * @buffer: Array of chars
+ * @buff_ind: Index at which to add the next char, represents the length.
  */
-int _printf(const char *format, ...)
+void print_buffer(char buffer[], int *buff_ind)
 {
-    va_list args;
-    int count = 0;
+    if (*buff_ind > 0)
+        write(1, &buffer[0], *buff_ind);
 
-    va_start(args, format);
-
-    while (*format != '\0')
-    {
-        if (*format == '%' && (*(format + 1) == 'c' || *(format + 1) == 's' ||
-                                 *(format + 1) == '%' || *(format + 1) == 'd' ||
-                                 *(format + 1) == 'i'))
-        {
-            format++;
-            switch (*format)
-            {
-            case 'c':
-                count += putchar(va_arg(args, int));
-                break;
-            case 's':
-                count += _puts(va_arg(args, char *));
-                break;
-            case '%':
-                count += putchar('%');
-                break;
-            case 'd':
-            case 'i':
-                count += _putn(va_arg(args, int));
-                break;
-            default:
-                count += putchar('%');
-                count += putchar(*format);
-            }
-        }
-        else
-        {
-            count += putchar(*format);
-        }
-        format++;
-    }
-
-    va_end(args);
-    return count;
+    *buff_ind = 0;
 }
 
 /**
- * _putn - Custom function to print an integer
- * @n: Integer to be printed
- *
+ * is_valid_specifier - Checks if a specifier is valid
+ * @spec: Specifier character
+ * Return: 1 if valid, 0 otherwise
+ */
+int is_valid_specifier(char spec)
+{
+    return (spec == 'c' || spec == 's' || spec == '%');
+}
+
+/**
+ * print_specifier - Prints a specifier
+ * @spec: Specifier character
+ * @args: Arguments list
+ * @buffer: Array to store printed characters
  * Return: Number of characters printed
  */
-int _putn(int n)
+int print_specifier(char spec, va_list args, char buffer[])
 {
-    if (n < 0)
+    int printed = 0;
+
+    switch (spec)
     {
-        putchar('-');
-        n = -n;
+    case 'c':
+        printed = print_char(args, buffer);
+        break;
+    case 's':
+        printed = print_string(args, buffer);
+        break;
+    case '%':
+        printed = print_percent(args, buffer);
+        break;
     }
 
-    if (n / 10 != 0)
-        _putn(n / 10);
-
-    return putchar(n % 10 + '0');
+    return printed;
 }
 
